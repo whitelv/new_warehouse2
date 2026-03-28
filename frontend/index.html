@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Складський облік — Будівельний магазин</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">🔩</div>
+    <div>
+      <div class="brand-name">Складський облік</div>
+      <div class="brand-sub">Кріпильні вироби</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Навігація</div>
+    <button class="nav-item active" onclick="showPage('products', this)">Товари</button>
+    <button class="nav-item" onclick="showPage('history', this)">Журнал операцій</button>
+    <button class="nav-item" onclick="showPage('weighing', this)">Зважування</button>
+    <button class="nav-item" onclick="showPage('outgoing', this)">Витрата</button>
+    <button id="nav-workers" class="nav-item" onclick="showPage('workers', this)" style="display:none;">Працівники</button>
+  </nav>
+  <div class="sidebar-footer">
+    <div id="session-info" style="font-size:0.78rem; color:rgba(255,255,255,0.6);">Не авторизовано</div>
+  </div>
+</aside>
+
+<div class="content-area">
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <header class="topbar">
+    <button class="hamburger" onclick="toggleSidebar()">&#9776;</button>
+    <span class="topbar-title" id="page-title">Товари</span>
+    <div class="topbar-auth">
+      <button id="topbar-login-btn" class="btn btn-outline" onclick="handleLoginLogout()">Увійти</button>
+    </div>
+  </header>
+  <main>
+
+  <!-- ══ ТОВАРИ ══ -->
+  <div id="page-products" class="page active">
+    <div id="products-alert"></div>
+    <div class="page-hero">
+      <div class="page-hero-accent"></div>
+      <div class="page-hero-title">Складський облік — Кріпильні вироби</div>
+      <div class="page-hero-sub">Поточний стан залишків, прихід та витрата товарів</div>
+    </div>
+    <div class="stats-grid" id="stats-grid" style="margin-bottom:20px;">
+      <div class="loading">Завантаження...</div>
+    </div>
+    <div class="table-wrap">
+      <div class="table-header">
+        <h3>Всі товари</h3>
+        <button class="btn btn-primary admin-only" onclick="openAddProduct()" disabled>+ Додати товар</button>
+      </div>
+      <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Назва</th>
+            <th>Штрихкод</th>
+            <th>Одиниця (г)</th>
+            <th>Залишок</th>
+            <th>Мінімум</th>
+            <th>Статус</th>
+            <th>Дії</th>
+          </tr>
+        </thead>
+        <tbody id="products-tbody">
+          <tr><td colspan="7" class="loading">Завантаження...</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ІСТОРІЯ ══ -->
+  <div id="page-history" class="page">
+    <div class="table-wrap">
+      <div class="table-header">
+        <h3>Журнал операцій</h3>
+        <button class="btn btn-danger admin-only" onclick="clearHistory()" disabled>Очистити все</button>
+      </div>
+      <div class="filter-bar">
+        <select id="filter-type" onchange="applyHistoryFilter()">
+          <option value="">Всі типи</option>
+          <option value="incoming">Прихід</option>
+          <option value="outgoing">Витрата</option>
+        </select>
+        <select id="filter-worker" onchange="applyHistoryFilter()">
+          <option value="">Всі працівники</option>
+        </select>
+        <label class="filter-date-wrap">
+          <span class="filter-date-label">Дата</span>
+          <input type="date" id="filter-date" onchange="applyHistoryFilter()">
+        </label>
+        <select id="filter-sort" onchange="applyHistoryFilter()">
+          <option value="newest">Найновіші</option>
+          <option value="oldest">Найстаріші</option>
+        </select>
+        <button class="btn btn-outline" onclick="clearHistoryFilters()" style="font-size:0.85rem; padding:7px 14px;">Скинути</button>
+      </div>
+      <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Час</th>
+            <th>Товар</th>
+            <th>Тип</th>
+            <th>Кількість</th>
+            <th>Маса нетто (г)</th>
+            <th>Працівник</th>
+          </tr>
+        </thead>
+        <tbody id="history-tbody">
+          <tr><td colspan="6" class="loading">Завантаження...</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ЗВАЖУВАННЯ ══ -->
+  <div id="page-weighing" class="page">
+    <div id="weighing-alert"></div>
+    <div class="action-page">
+      <div class="action-card">
+        <div class="action-icon">⚖️</div>
+        <h2>Прийом товару</h2>
+        <p>Автоматичне зважування через ESP32 — поле заповнюється без участі людини</p>
+        <ol class="steps-list">
+          <li>Натисніть кнопку і відскануйте QR-код товару камерою</li>
+          <li>Поставте товар на ваги</li>
+          <li>Вага стабілізується і збережеться автоматично</li>
+        </ol>
+        <button class="btn btn-primary auth-only" onclick="openWeighing()" disabled>Розпочати зважування</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ВИТРАТА ══ -->
+  <div id="page-outgoing" class="page">
+    <div id="outgoing-alert"></div>
+    <div class="action-page">
+      <div class="action-card">
+        <div class="action-icon">➖</div>
+        <h2>Витрата товару</h2>
+        <p>Списання на основі зважування — кількість розраховується автоматично</p>
+        <ol class="steps-list">
+          <li>Натисніть кнопку і відскануйте QR-код товару</li>
+          <li>Поставте залишок товару на ваги</li>
+          <li>Кількість розрахується автоматично, підтвердіть списання</li>
+        </ol>
+        <button class="btn btn-danger auth-only" onclick="openOutgoing()" disabled>Списати товар</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ПРАЦІВНИКИ ══ -->
+  <div id="page-workers" class="page">
+    <div id="workers-alert"></div>
+    <div class="table-wrap">
+      <div class="table-header">
+        <h3>Працівники</h3>
+        <button class="btn btn-primary admin-only" onclick="openAddWorker()" disabled>+ Додати</button>
+      </div>
+      <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Ім'я</th>
+            <th>RFID</th>
+            <th>Дії</th>
+          </tr>
+        </thead>
+        <tbody id="workers-tbody">
+          <tr><td colspan="2" class="loading">Завантаження...</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+
+  </main>
+</div><!-- end .content-area -->
+</div><!-- end .app -->
+
+<!-- ══ МОДАЛ: Списання товару ══ -->
+<div class="modal-overlay" id="modal-outgoing">
+  <div class="modal">
+    <h3>Списання товару</h3>
+    <div class="form-group">
+      <label>Штрихкод товару</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="out-barcode" placeholder="Відскануйте або введіть вручну" style="flex:1;">
+        <button class="btn btn-outline" onclick="startOutgoingScanner()" id="out-scanner-btn">📷 Сканувати</button>
+      </div>
+      <div id="out-scan-status" style="font-size:0.78rem; color:#718096; margin-top:4px;">Натисніть "Сканувати" і наведіть на QR код</div>
+      <video id="out-scanner-video" autoplay playsinline style="width:100%;border-radius:8px;margin-top:8px;display:none;"></video>
+    </div>
+    <div class="form-group">
+      <label>Кількість (шт)</label>
+      <div style="display:flex; gap:8px;">
+        <input type="number" id="out-qty" min="1" value="1" style="flex:1;">
+        <button class="btn btn-outline" onclick="startOutgoingWeigh()" id="out-weigh-btn">⚖️ Зважити</button>
+      </div>
+      <div id="out-weigh-status" style="font-size:0.78rem; color:#718096; margin-top:4px;">Покладіть залишок товару на ваги і натисніть "Зважити" — система порахує кількість</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-outgoing')">Скасувати</button>
+      <button class="btn btn-danger" onclick="submitOutgoing()">Списати</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ МОДАЛ: Зважування ══ -->
+<div class="modal-overlay" id="modal-weighing">
+  <div class="modal">
+    <h3>Прийом товару</h3>
+    <div class="form-group">
+      <label>Штрихкод товару</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="w-barcode" placeholder="Відскануйте або введіть вручну" style="flex:1;">
+        <button class="btn btn-outline" onclick="startWeighScanner()" id="weigh-scanner-btn">📷 Сканувати</button>
+      </div>
+      <div id="weigh-scan-status" style="font-size:0.78rem; color:#718096; margin-top:4px;">Натисніть "Сканувати" і наведіть на QR код</div>
+      <video id="weigh-scanner-video" autoplay playsinline style="width:100%;border-radius:8px;margin-top:8px;display:none;"></video>
+    </div>
+    <div class="form-group">
+      <label>Вага товару (г)</label>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <input type="number" id="weigh-gross" placeholder="Натисніть Зважити..." readonly style="flex:1;">
+        <button class="btn btn-outline" onclick="startGrossWeigh()" id="weigh-gross-btn">⚖️ Зважити</button>
+      </div>
+      <div id="weigh-gross-status" style="font-size:0.78rem; color:#718096; margin-top:4px;">Покладіть товар на ваги і натисніть "Зважити"</div>
+    </div>
+    <div id="weigh-live-qty" style="font-size:0.9rem; color:#68d391; margin-top:6px; font-weight:600;"></div>
+    <div id="weigh-send-status" style="font-size:0.85rem; color:#718096; margin-top:8px;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-weighing')">Скасувати</button>
+      <button class="btn btn-primary" onclick="submitWeighing()" id="weigh-save-btn" disabled>✅ Зберегти</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ МОДАЛ: Додати товар ══ -->
+<div class="modal-overlay" id="modal-product">
+  <div class="modal">
+    <h3>Новий товар</h3>
+    <div class="form-group">
+      <label>Штрихкод</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="p-barcode" placeholder="Відскануйте або введіть вручну" style="flex:1;">
+        <button class="btn btn-outline" onclick="startQRScan()" id="qr-scan-btn">📷 Сканувати</button>
+      </div>
+      <div id="qr-status" style="font-size:0.78rem; color:#718096; margin-top:4px;">Натисніть "Сканувати" і наведіть на QR код</div>
+      <video id="qr-video" autoplay playsinline style="width:100%;border-radius:8px;margin-top:8px;display:none;"></video>
+    </div>
+    <div class="form-group">
+      <label>Назва товару</label>
+      <input type="text" id="p-name" placeholder="Назва">
+    </div>
+    <div class="form-group">
+      <label>Маса однієї одиниці (г)</label>
+      <div style="display:flex; gap:8px;">
+        <input type="number" id="p-unit" step="0.1" placeholder="Вага (г)" style="flex:1;">
+        <button class="btn btn-outline" onclick="startWeighItem()" id="weigh-btn">⚖️ Зважити</button>
+      </div>
+      <div id="weigh-status" style="font-size:0.78rem; color:#718096; margin-top:4px;">Покладіть один виріб на ваги і натисніть "Зважити"</div>
+    </div>
+    <div class="form-group">
+      <label>Мінімальний залишок (шт)</label>
+      <input type="number" id="p-min" placeholder="Мін. залишок (шт)">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-product')">Скасувати</button>
+      <button class="btn btn-primary" onclick="submitProduct()">Зберегти</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ МОДАЛ: Додати працівника ══ -->
+<div class="modal-overlay" id="modal-worker">
+  <div class="modal">
+    <h3>Новий працівник</h3>
+    <div class="form-group">
+      <label>RFID — прикладіть картку до зчитувача</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="w-rfid" placeholder="Очікування картки..." readonly style="flex:1; opacity:0.7;">
+        <button class="btn btn-outline" onclick="startRFIDScan()" id="rfid-scan-btn">🔄 Сканувати</button>
+      </div>
+      <div id="rfid-status" style="font-size:0.78rem; color:#718096; margin-top:4px;">Натисніть "Сканувати" і прикладіть картку</div>
+    </div>
+    <div class="form-group">
+      <label>Ім'я працівника</label>
+      <input type="text" id="w-name" placeholder="Ім'я">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal('modal-worker')">Скасувати</button>
+      <button class="btn btn-primary" onclick="submitWorker()">Зберегти</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
