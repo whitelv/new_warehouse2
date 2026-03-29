@@ -176,7 +176,7 @@
     .sidebar-overlay.visible { display: block; }
 
     /* ── Main ── */
-    main { padding: 28px; max-width: 1100px; width: 100%; }
+    main { padding: 28px; max-width: 1400px; width: 100%; margin: 0 auto; }
 
     .page { display: none; }
     .page.active { display: block; animation: fadeIn 0.18s ease; }
@@ -515,6 +515,8 @@
       align-items: center;
       gap: 10px;
       pointer-events: none;
+      width: calc(100vw - 32px);
+      max-width: 400px;
     }
     .toast {
       background: var(--surface);
@@ -528,7 +530,8 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      white-space: nowrap;
+      width: 100%;
+      white-space: normal;
       pointer-events: auto;
     }
     .toast.success { border-left: 3px solid #059669; color: #059669; }
@@ -615,6 +618,23 @@
     /* ══════════════════════════════════════
        RESPONSIVE
     ══════════════════════════════════════ */
+    @media (min-width: 1400px) {
+      main { padding: 36px 40px; }
+      .stat-card { padding: 26px 28px; }
+      .stat-card .val { font-size: 2.6rem; }
+      .stat-card .lbl { font-size: 0.78rem; }
+      .stat-card-icon { width: 50px; height: 50px; font-size: 1.4rem; margin-bottom: 18px; }
+      .stats-grid { gap: 22px; margin-bottom: 34px; }
+      .table-header { padding: 20px 28px; }
+      .table-header h3 { font-size: 1.05rem; }
+      th { padding: 12px 22px; font-size: 0.75rem; }
+      td { padding: 14px 22px; font-size: 0.925rem; }
+      .page-hero { padding: 28px 36px; margin-bottom: 30px; }
+      .page-hero-title { font-size: 1.3rem; }
+      .page-hero-sub { font-size: 0.88rem; }
+      .topbar { height: 60px; padding: 0 36px; }
+      .topbar-title { font-size: 1.1rem; }
+    }
     @media (max-width: 900px) {
       main { padding: 18px; }
     }
