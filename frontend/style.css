@@ -854,16 +854,17 @@
         gap: 6px;
         margin-top: 10px;
       }
-      .filter-bar select,
-      .filter-bar .filter-date-wrap,
-      .filter-bar .btn-outline {
+      .history-head .filter-bar select,
+      .history-head .filter-bar .filter-date-wrap,
+      .history-head .filter-bar .btn {
+        width: 100%;
+        min-width: 0;
+        height: 36px;
+        min-height: 36px;
         font-size: 0.76rem;
         padding: 6px 8px;
-        min-height: unset;
-        height: 36px;
         box-sizing: border-box;
       }
-      .filter-bar .btn-outline { width: 100%; }
       .filter-date-label { font-size: 0.72rem; }
     }
     @media (max-width: 480px) {

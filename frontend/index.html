@@ -91,7 +91,6 @@
           <div class="page-hero-title">Журнал операцій</div>
           <div class="page-hero-sub">Всі рухи товарів на складі</div>
         </div>
-        <button class="btn btn-danger admin-only" onclick="clearHistory()" disabled>Очистити все</button>
       </div>
       <div class="filter-bar" style="padding:0; border:none; margin-top:14px;">
         <select id="filter-type" onchange="applyHistoryFilter()">
@@ -111,6 +110,7 @@
           <option value="oldest">Найстаріші</option>
         </select>
         <button class="btn btn-outline" onclick="clearHistoryFilters()" style="font-size:0.85rem; padding:7px 14px;">Скинути</button>
+        <button class="btn btn-danger admin-only" onclick="clearHistory()" disabled>Очистити все</button>
       </div>
     </div>
     <div class="table-wrap" style="border-radius:0 0 14px 14px;">
