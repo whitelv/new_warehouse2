@@ -776,9 +776,16 @@
       height: calc(100dvh - 54px - 56px);
       overflow: hidden;
     }
-    #page-products.active, #page-workers.active, #page-history.active {
+    #page-products.active, #page-workers.active, #page-history.active,
+    #page-weighing.active, #page-outgoing.active {
       display: flex;
       flex-direction: column;
+    }
+    #page-weighing.active .action-page,
+    #page-outgoing.active .action-page {
+      flex: 1;
+      height: auto;
+      min-height: 0;
     }
     #page-products.active .page-hero,
     #page-products.active .stats-grid { flex-shrink: 0; }
@@ -870,7 +877,7 @@
       /* Mobile height overrides */
       #page-products.active, #page-workers.active,
       #page-history.active { height: calc(100dvh - 54px - 24px); }
-      #page-weighing.active, #page-outgoing.active { height: auto; overflow: visible; }
+      #page-weighing.active, #page-outgoing.active { height: calc(100dvh - 54px - 24px); overflow-y: auto; }
       /* Компактні фільтри на мобільному — сітка 2 колонки */
       .history-head { padding: 14px 14px 12px; }
       .history-head .filter-bar {
