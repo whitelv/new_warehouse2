@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23e8660f'/%3E%3Cpath d='M12 26l20-12 20 12v22H12z' fill='%23fff' opacity='.2'/%3E%3Cpath d='M14 27l18-11 18 11v21H14z' fill='white'/%3E%3Cpath d='M32 16L14 27h36z' fill='%23fff' opacity='.85'/%3E%3Crect x='24' y='36' width='16' height='12' rx='2' fill='%23e8660f'/%3E%3Crect x='30' y='36' width='4' height='7' fill='%23c45508'/%3E%3C/svg%3E">
 </head>
 <body>
 
@@ -200,7 +201,7 @@
     <div class="form-group">
       <label>Штрихкод товару</label>
       <div style="display:flex; gap:8px;">
-        <input type="text" id="out-barcode" placeholder="Відскануйте або введіть вручну" style="flex:1;">
+        <input type="text" id="out-barcode" placeholder="Відскануйте товар" style="flex:1;">
         <button class="btn btn-outline" onclick="startOutgoingScanner()" id="out-scanner-btn">📷 Сканувати</button>
       </div>
       <div id="out-scan-status" style="font-size:0.78rem; color:#718096; margin-top:4px;">Натисніть "Сканувати" і наведіть на QR код</div>
@@ -228,7 +229,7 @@
     <div class="form-group">
       <label>Штрихкод товару</label>
       <div style="display:flex; gap:8px;">
-        <input type="text" id="w-barcode" placeholder="Відскануйте або введіть вручну" style="flex:1;">
+        <input type="text" id="w-barcode" placeholder="Відскануйте товар" style="flex:1;">
         <button class="btn btn-outline" onclick="startWeighScanner()" id="weigh-scanner-btn">📷 Сканувати</button>
       </div>
       <div id="weigh-scan-status" style="font-size:0.78rem; color:#718096; margin-top:4px;">Натисніть "Сканувати" і наведіть на QR код</div>
@@ -237,7 +238,7 @@
     <div class="form-group">
       <label>Вага товару (г)</label>
       <div style="display:flex; gap:8px; align-items:center;">
-        <input type="number" id="weigh-gross" placeholder="Натисніть Зважити..." readonly style="flex:1;">
+        <input type="number" id="weigh-gross" placeholder="— г" readonly style="flex:1;">
         <button class="btn btn-outline" onclick="startGrossWeigh()" id="weigh-gross-btn">⚖️ Зважити</button>
       </div>
       <div id="weigh-gross-status" style="font-size:0.78rem; color:#718096; margin-top:4px;">Покладіть товар на ваги і натисніть "Зважити"</div>
@@ -258,7 +259,7 @@
     <div class="form-group">
       <label>Штрихкод</label>
       <div style="display:flex; gap:8px;">
-        <input type="text" id="p-barcode" placeholder="Відскануйте або введіть вручну" style="flex:1;">
+        <input type="text" id="p-barcode" placeholder="Відскануйте товар" style="flex:1;">
         <button class="btn btn-outline" onclick="startQRScan()" id="qr-scan-btn">📷 Сканувати</button>
       </div>
       <div id="qr-status" style="font-size:0.78rem; color:#718096; margin-top:4px;">Натисніть "Сканувати" і наведіть на QR код</div>

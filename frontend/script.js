@@ -140,6 +140,7 @@
         }
       });
     } catch(e) {
+      video.style.display = 'none';
       return 'Помилка камери: ' + e.message;
     }
     return null;
