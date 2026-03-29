@@ -488,7 +488,8 @@ void loop() {
          if (LoadCell.update()) { currentWeight = LoadCell.getData(); break; }
          delay(10);
        }
-       showOLED("Weight:", String(currentWeight, 1) + "g", "Wait stable...");
+       float displayWeight = max(0.0f, currentWeight);
+       showOLED("Weight:", String(displayWeight, 1) + "g", "Wait stable...");
      }
 
      // Авто-підтвердження ваги при стабілізації (кожні 120мс)
@@ -509,7 +510,7 @@ void loop() {
          httpConf.setTimeout(1000);
          httpConf.POST("{\"weight\":" + String(currentWeight, 2) + "}");
          httpConf.end();
-         showOLED("Weight:", String(currentWeight, 1) + "g", "Confirmed!");
+         showOLED("Weight:", String(max(0.0f, currentWeight), 1) + "g", "Confirmed!");
        }
      }
 
