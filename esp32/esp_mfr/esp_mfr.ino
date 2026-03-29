@@ -22,7 +22,7 @@ HX711_ADC LoadCell(HX711_DT, HX711_SCK);
 
 const char* ssid      = "My WiFi";
 const char* password  = "84868725";
-const char* serverURL = "https://192.168.0.107:8000";
+const char* serverURL = "https://warehouse-app-t4op.onrender.com";
 
 bool isAuthorized = false;
 String workerRFID = "";
@@ -72,6 +72,7 @@ unsigned long lastWeighOled    = 0;
 unsigned long lastPendingCheck = 0;
 unsigned long lastSessionCheck = 0;
 unsigned long lastStableCheck  = 0;
+unsigned long lastWaitSessionCheck = 0;
 unsigned long lastAutoConfTime = 0;
 
 float lastStableWeight = 0.0;
@@ -298,14 +299,42 @@ void setup() {
 // ════════════════════════════════════════════════════════
 void loop() {
 
-  // Зчитування ваги — з кількома спробами щоб отримати свіжий зразок
-  for (int i = 0; i < 10; i++) {
+  // Зчитування ваги — агресивно, щоб мати свіжий зразок
+  for (int i = 0; i < 20; i++) {
     if (LoadCell.update()) { currentWeight = LoadCell.getData(); break; }
-    delay(15);
+    delay(8);
   }
 
   // ── WAIT_RFID: тільки читаємо картку, жодних HTTP ────
   if (systemState == WAIT_RFID) {
+
+    // Перевіряємо сесію кожні 5с — якщо вже є активна, переходимо в READY
+    if (millis() - lastWaitSessionCheck > 5000) {
+      lastWaitSessionCheck = millis();
+      HTTPClient httpSess;
+      httpSess.begin(String(serverURL) + "/session/");
+      httpSess.setTimeout(2000);
+      int sc = httpSess.GET();
+      if (sc == 200) {
+        String sb = httpSess.getString();
+        if (sb.indexOf("\"rfid\":null") < 0 && sb.indexOf("\"rfid\":\"\"") < 0) {
+          String workerName = "";
+          int ni = sb.indexOf("\"name\":\"");
+          if (ni >= 0) { int s = ni+8, e = sb.indexOf("\"",s); if(e>s) workerName = sb.substring(s,e); }
+          String rfidStr = "";
+          int ri = sb.indexOf("\"rfid\":\"");
+          if (ri >= 0) { int s = ri+8, e = sb.indexOf("\"",s); if(e>s) rfidStr = sb.substring(s,e); }
+          workerRFID = rfidStr;
+          isAuthorized = true;
+          systemState = READY;
+          httpSess.end();
+          showOLED("Welcome back!", translit(workerName), "Use website");
+          return;
+        }
+      }
+      httpSess.end();
+    }
+
     if (!mfrc522.PICC_IsNewCardPresent()) return;
     if (!mfrc522.PICC_ReadCardSerial()) return;
 
@@ -319,7 +348,7 @@ void loop() {
     // Перевіряємо режим реєстрації
     HTTPClient httpRegMode;
     httpRegMode.begin(String(serverURL) + "/rfid/register-mode/");
-    httpRegMode.setTimeout(1500);
+    httpRegMode.setTimeout(800);
     int regCode = httpRegMode.GET();
     String regResp = httpRegMode.getString();
     httpRegMode.end();
@@ -346,7 +375,7 @@ void loop() {
     // Перевіряємо режим логіну — якщо не натиснуто "Увійти", ігноруємо
     HTTPClient httpLoginMode;
     httpLoginMode.begin(String(serverURL) + "/rfid/login-mode/");
-    httpLoginMode.setTimeout(1500);
+    httpLoginMode.setTimeout(800);
     int loginCode = httpLoginMode.GET();
     String loginResp = httpLoginMode.getString();
     httpLoginMode.end();
@@ -437,12 +466,12 @@ void loop() {
     }
 
      // Відправка ваги на сервер
-     if (millis() - lastWeighSend > 800) {
+     if (millis() - lastWeighSend > 400) {
        lastWeighSend = millis();
        HTTPClient http;
        http.begin(String(serverURL) + "/weight/current/");
        http.addHeader("Content-Type", "application/json");
-       http.setTimeout(600);
+       http.setTimeout(2000);
       int wCode = http.POST("{\"weight\":" + String(currentWeight, 2) + "}");
        if (wCode == 200) {
          String wResp = http.getString();
@@ -451,18 +480,19 @@ void loop() {
        http.end();
      }
 
-     // OLED оновлення ваги в реальному часі (кожні 300мс)
-     if (weighModeActive && millis() - lastWeighOled > 300) {
+     // OLED оновлення ваги в реальному часі (кожні 200мс)
+     if (weighModeActive && millis() - lastWeighOled > 200) {
        lastWeighOled = millis();
-       if (currentWeight > 1.0) {
-         showOLED("Weight:", String(currentWeight, 1) + "g", "Wait stable...");
-       } else {
-         showOLED("Put on scale", "", "Wait stable...");
+       // Свіже зчитування перед показом
+       for (int i = 0; i < 15; i++) {
+         if (LoadCell.update()) { currentWeight = LoadCell.getData(); break; }
+         delay(10);
        }
+       showOLED("Weight:", String(currentWeight, 1) + "g", "Wait stable...");
      }
 
-     // Авто-підтвердження ваги при стабілізації (кожні 250мс)
-     if (weighModeActive && millis() - lastStableCheck > 250) {
+     // Авто-підтвердження ваги при стабілізації (кожні 120мс)
+     if (weighModeActive && millis() - lastStableCheck > 120) {
        lastStableCheck = millis();
        if (currentWeight > 1.0 && abs(currentWeight - lastStableWeight) < 2.0) {
          stableCount++;
@@ -470,7 +500,7 @@ void loop() {
          stableCount = 0;
          lastStableWeight = currentWeight;
        }
-       if (stableCount >= 3 && millis() - lastAutoConfTime > 3000) {
+       if (stableCount >= 2 && millis() - lastAutoConfTime > 3000) {
          lastAutoConfTime = millis();
          stableCount = 0;
          HTTPClient httpConf;
@@ -484,7 +514,7 @@ void loop() {
      }
 
      // Перевірка pending зважування
-     if (millis() - lastPendingCheck > 1500) {
+     if (millis() - lastPendingCheck > 700) {
        lastPendingCheck = millis();
        HTTPClient http;
        http.begin(String(serverURL) + "/weigh/pending/");
@@ -558,12 +588,12 @@ void loop() {
   if (systemState == WEIGHING) {
 
     // Відправка ваги + перевірка чи режим ще активний
-    if (millis() - lastWeighSend > 800) {
+    if (millis() - lastWeighSend > 400) {
       lastWeighSend = millis();
       HTTPClient http;
       http.begin(String(serverURL) + "/weight/current/");
       http.addHeader("Content-Type", "application/json");
-      http.setTimeout(500);
+      http.setTimeout(2000);
       int wCode = http.POST("{\"weight\":" + String(currentWeight, 2) + "}");
       if (wCode == 200) {
         String wResp = http.getString();
@@ -580,8 +610,13 @@ void loop() {
     }
 
     // Показуємо вагу в реальному часі
-    if (millis() - lastWeighOled > 300) {
+    if (millis() - lastWeighOled > 200) {
       lastWeighOled = millis();
+      // Свіже зчитування перед показом
+      for (int i = 0; i < 15; i++) {
+        if (LoadCell.update()) { currentWeight = LoadCell.getData(); break; }
+        delay(10);
+      }
       showOLED(currentProduct.substring(0,16), String(currentWeight, 1) + "g", "Wait stable...");
     }
 
@@ -592,8 +627,8 @@ void loop() {
       setBrightness(brightIndex);
     }
 
-    // Авто-збереження при стабілізації (кожні 250мс)
-    if (millis() - lastStableCheck > 250) {
+    // Авто-збереження при стабілізації (кожні 120мс)
+    if (millis() - lastStableCheck > 120) {
       lastStableCheck = millis();
       if (currentWeight > 1.0 && abs(currentWeight - lastStableWeight) < 3.0) {
         stableCount++;
@@ -601,7 +636,7 @@ void loop() {
         stableCount = 0;
         lastStableWeight = currentWeight;
       }
-      if (stableCount >= 3) {
+      if (stableCount >= 2) {
         stableCount = 0;
         float net = currentWeight;
         if (net < 0) net = 0;

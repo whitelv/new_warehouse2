@@ -561,42 +561,60 @@
 
     if (weighPollInterval) { clearInterval(weighPollInterval); weighPollInterval = null; }
 
-    fetch(API + '/weight/mode/', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({active: true})
-    });
-    // Очищаємо стару підтверджену вагу
-    fetch(API + '/weight/confirmed/');
+    const stopWeigh = () => {
+      fetch(API + '/weight/mode/', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({active:false}) });
+    };
+
+    // Вмикаємо режим (для OLED ESP32), але не чекаємо — одразу стартуємо опитування
+    fetch(API + '/weight/mode/', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({active:true}) });
 
     let attempts = 0;
+    let errors   = 0;
+    let prev     = null;
+    let weightCleared = false;
+    const MAX_ATTEMPTS = 400;
+    const MAX_ERRORS   = 6;
+
     weighPollInterval = setInterval(async () => {
       attempts++;
       try {
-        const res  = await fetch(API + '/weight/confirmed/');
+        const res  = await fetch(API + '/weight/current/');
         const data = await res.json();
-        if (data.weight !== null && data.weight !== undefined && data.weight > minWeight) {
-          clearInterval(weighPollInterval); weighPollInterval = null;
-          fetch(API + '/weight/mode/', {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({active: false})
-          });
-          if (btn) { btn.textContent = '⚖️ Зважити'; btn.disabled = false; }
-          onStable(data.weight);
-          return;
+        errors = 0;
+
+        const w = parseFloat(data.weight);
+        if (!isNaN(w) && w <= minWeight) {
+          weightCleared = true;
+          prev = null;
+        } else if (!isNaN(w) && w > minWeight && weightCleared) {
+          if (prev !== null && Math.abs(w - prev) < 3.0) {
+            clearInterval(weighPollInterval); weighPollInterval = null;
+            stopWeigh();
+            if (btn) { btn.textContent = '⚖️ Зважити'; btn.disabled = false; }
+            onStable((w + prev) / 2);
+            return;
+          }
+          prev = w;
         }
       } catch(e) {
-        clearInterval(weighPollInterval); weighPollInterval = null;
-        if (btn) { btn.textContent = '⚖️ Зважити'; btn.disabled = false; }
-        fetch(API + '/weight/mode/', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({active:false}) });
+        errors++;
+        if (errors >= MAX_ERRORS) {
+          clearInterval(weighPollInterval); weighPollInterval = null;
+          if (btn) { btn.textContent = '⚖️ Зважити'; btn.disabled = false; }
+          stopWeigh();
+          if (status) { status.style.color = '#fc8181'; status.textContent = '❌ Помилка мережі. Спробуйте ще раз.'; }
+          if (onTimeout) onTimeout();
+        }
+        return;
       }
-      if (attempts > 85) {
+      if (attempts >= MAX_ATTEMPTS) {
         clearInterval(weighPollInterval); weighPollInterval = null;
         if (btn) { btn.textContent = '⚖️ Зважити'; btn.disabled = false; }
-        fetch(API + '/weight/mode/', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({active:false}) });
+        stopWeigh();
         if (status) { status.style.color = '#fc8181'; status.textContent = '❌ Час вийшов. Спробуйте ще раз.'; }
         if (onTimeout) onTimeout();
       }
-    }, 700);
+    }, 80);
   }
 
   async function startTareWeigh() {
