@@ -119,20 +119,13 @@
     const video = document.getElementById(videoId);
     video.style.display = 'block';
     try {
-      // Спочатку пробуємо задню камеру
-      let usedFrontCamera = false;
-      try {
-        cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      } catch(e) {
-        // Якщо задньої немає — беремо будь-яку (фронтальну)
-        cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
-        usedFrontCamera = true;
-      }
+      cameraStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: 'environment' } }
+      });
 
-      // Перевіряємо яка камера реально використовується
       const track = cameraStream.getVideoTracks()[0];
       const settings = track.getSettings();
-      if (settings.facingMode === 'user' || usedFrontCamera) {
+      if (settings.facingMode === 'user') {
         video.style.transform = 'scaleX(-1)';
       } else {
         video.style.transform = '';
@@ -571,7 +564,7 @@
     let attempts = 0;
     let errors   = 0;
     let prev     = null;
-    let weightCleared = false;
+    let weightCleared = true;
     const MAX_ATTEMPTS = 400;
     const MAX_ERRORS   = 6;
 
