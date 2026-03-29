@@ -196,7 +196,7 @@
     .sidebar-overlay.visible { display: block; }
 
     /* ── Main ── */
-    main { padding: 28px; max-width: 1400px; width: 100%; margin: 0 auto; }
+    main { padding: 28px; max-width: 1400px; width: 100%; margin: 0 auto; overflow-x: hidden; }
 
     .page { display: none; }
     .page.active { display: block; animation: fadeIn 0.18s ease; }
@@ -426,6 +426,10 @@
       box-shadow: 0 0 0 3px rgba(249,115,22,0.14);
     }
     .form-group input[readonly] { color: var(--text2); }
+    /* Рівна ширина кнопок Сканувати/Зважити у формах */
+    .form-group .btn { width: 120px; flex-shrink: 0; }
+    /* Блок скролу сторінки коли відкрито модал */
+    body:has(.modal-overlay.open) { overflow: hidden; }
     .modal-actions {
       display: flex; gap: 10px; justify-content: flex-end;
       margin-top: 22px; padding-top: 18px;
@@ -439,7 +443,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding-top: 24px;
+      justify-content: center;
+      min-height: calc(100vh - 110px);
       position: relative;
     }
     /* Декоративні кола за action-card */
@@ -661,6 +666,35 @@
     }
 
 
+
+    /* ══════════════════════════════════════
+       HISTORY HEAD (замінює hero + table-header)
+    ══════════════════════════════════════ */
+    .history-head {
+      background: linear-gradient(135deg, #fff8f2 0%, #fff3e8 100%);
+      border: 1px solid #f0d9c8;
+      border-bottom: none;
+      border-radius: 14px 14px 0 0;
+      padding: 22px 28px 18px 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .history-head::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      background: rgba(249,115,22,0.07);
+      pointer-events: none;
+    }
+    .history-head-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
 
     /* ══════════════════════════════════════
        HERO BANNER

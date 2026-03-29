@@ -409,18 +409,6 @@
     allOperations = await res.json();
     applyHistoryFilter();
 
-    // Today's chips
-    const today = new Date().toISOString().slice(0, 10);
-    const todayOps = allOperations.filter(o => (o.timestamp || '').slice(0, 10) === today);
-    const todayIn  = todayOps.filter(o => o.type === 'incoming').length;
-    const todayOut = todayOps.filter(o => o.type === 'outgoing').length;
-    const chips = document.getElementById('history-chips');
-    if (chips) chips.innerHTML = `
-      <span class="h-chip">📋 Всього: ${allOperations.length}</span>
-      <span class="h-chip">📅 Сьогодні: ${todayOps.length}</span>
-      <span class="h-chip green">▲ Прихід сьогодні: ${todayIn}</span>
-      <span class="h-chip red">▼ Витрата сьогодні: ${todayOut}</span>
-    `;
   }
 
 
@@ -1137,7 +1125,7 @@
       const w = parseFloat(data.weight);
       if (!isNaN(w)) {
         dot.className = 'esp32-dot online';
-        label.textContent = `ESP32 · ${w.toFixed(1)} г`;
+        label.textContent = 'ESP32 · онлайн';
       } else {
         dot.className = 'esp32-dot offline';
         label.textContent = 'ESP32 · офлайн';

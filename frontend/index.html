@@ -32,10 +32,6 @@
   </nav>
   <div class="sidebar-footer">
     <div id="session-info" style="font-size:0.78rem; color:rgba(255,255,255,0.6);">Не авторизовано</div>
-    <div class="esp32-status" id="esp32-status">
-      <span class="esp32-dot" id="esp32-dot"></span>
-      <span id="esp32-label">ESP32 —</span>
-    </div>
   </div>
 </aside>
 
@@ -89,18 +85,15 @@
 
   <!-- ══ ІСТОРІЯ ══ -->
   <div id="page-history" class="page">
-    <div class="page-hero" style="margin-bottom:0; border-radius:14px 14px 0 0; border-bottom:none;">
-      <div class="page-hero-accent"></div>
-      <div class="page-hero-title">Журнал операцій</div>
-      <div class="page-hero-sub">Всі рухи товарів на складі</div>
-      <div class="history-chips" id="history-chips"></div>
-    </div>
-    <div class="table-wrap" style="border-radius:0 0 14px 14px;">
-      <div class="table-header">
-        <h3>Журнал операцій</h3>
+    <div class="history-head">
+      <div class="history-head-top">
+        <div>
+          <div class="page-hero-title">Журнал операцій</div>
+          <div class="page-hero-sub">Всі рухи товарів на складі</div>
+        </div>
         <button class="btn btn-danger admin-only" onclick="clearHistory()" disabled>Очистити все</button>
       </div>
-      <div class="filter-bar">
+      <div class="filter-bar" style="padding:0; border:none; margin-top:14px;">
         <select id="filter-type" onchange="applyHistoryFilter()">
           <option value="">Всі типи</option>
           <option value="incoming">Прихід</option>
@@ -119,6 +112,8 @@
         </select>
         <button class="btn btn-outline" onclick="clearHistoryFilters()" style="font-size:0.85rem; padding:7px 14px;">Скинути</button>
       </div>
+    </div>
+    <div class="table-wrap" style="border-radius:0 0 14px 14px;">
       <div class="table-scroll">
       <table>
         <thead>
