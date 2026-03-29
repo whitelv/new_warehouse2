@@ -20,6 +20,8 @@
 
     body {
       background: #f5ede3;
+      background-image: radial-gradient(circle, rgba(180,110,60,0.07) 1px, transparent 1px);
+      background-size: 28px 28px;
       background-attachment: fixed;
       color: var(--text);
       font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
@@ -50,6 +52,24 @@
     }
 
     /* Декоративні кола на фоні sidebar */
+    .sidebar::before {
+      content: '';
+      position: absolute;
+      top: -70px; right: -70px;
+      width: 220px; height: 220px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+      pointer-events: none;
+    }
+    .sidebar::after {
+      content: '';
+      position: absolute;
+      bottom: 60px; left: -80px;
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: rgba(249,115,22,0.07);
+      pointer-events: none;
+    }
 
     .sidebar-brand {
       display: flex;
@@ -420,6 +440,19 @@
       flex-direction: column;
       align-items: center;
       padding-top: 24px;
+      position: relative;
+    }
+    /* Декоративні кола за action-card */
+    .action-page::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(249,115,22,0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
     }
     .action-card {
       background: #ffffff;
@@ -428,20 +461,22 @@
       padding: 40px 36px;
       text-align: center;
       width: 100%;
-      max-width: 440px;
+      max-width: 480px;
       box-shadow: 0 4px 24px rgba(15,23,42,0.12), 0 1px 4px rgba(0,0,0,0.06);
+      position: relative; z-index: 1;
     }
     .action-icon {
-      width: 60px; height: 60px;
+      width: 68px; height: 68px;
       background: rgba(249,115,22,0.1);
       border: 1px solid rgba(249,115,22,0.2);
-      border-radius: 16px;
+      border-radius: 18px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.6rem;
-      margin: 0 auto 20px;
+      font-size: 1.8rem;
+      margin: 0 auto 22px;
+      box-shadow: 0 4px 16px rgba(249,115,22,0.15);
     }
-    .action-card h2 { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; }
-    .action-card > p { font-size: 0.85rem; color: var(--text2); margin-bottom: 28px; line-height: 1.6; }
+    .action-card h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 10px; }
+    .action-card > p { font-size: 0.87rem; color: var(--text2); margin-bottom: 28px; line-height: 1.6; }
 
     .steps-list {
       list-style: none;
@@ -565,10 +600,73 @@
     .loading { text-align: center; padding: 48px; color: var(--text3); font-size: 0.9rem; }
 
     /* ══════════════════════════════════════
+       ESP32 STATUS
+    ══════════════════════════════════════ */
+    .esp32-status {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 8px;
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.5);
+    }
+    .esp32-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      flex-shrink: 0;
+      transition: background 0.4s;
+    }
+    .esp32-dot.online  { background: #34d399; box-shadow: 0 0 6px rgba(52,211,153,0.6); }
+    .esp32-dot.offline { background: #f87171; }
+
+    /* ══════════════════════════════════════
+       HISTORY HERO CHIPS
+    ══════════════════════════════════════ */
+    .history-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .h-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      background: rgba(232,102,15,0.1);
+      color: var(--accent);
+      border: 1px solid rgba(232,102,15,0.2);
+    }
+    .h-chip.green { background: rgba(5,150,105,0.1); color: #059669; border-color: rgba(5,150,105,0.2); }
+    .h-chip.red   { background: rgba(220,38,38,0.1);  color: #dc2626; border-color: rgba(220,38,38,0.2); }
+
+    /* ══════════════════════════════════════
+       STOCK MINI-BAR
+    ══════════════════════════════════════ */
+    .stock-cell { display: flex; flex-direction: column; gap: 4px; }
+    .stock-bar-wrap {
+      width: 72px; height: 5px;
+      background: #e8e8e8;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .stock-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.4s ease;
+    }
+
+
+
+    /* ══════════════════════════════════════
        HERO BANNER
     ══════════════════════════════════════ */
     .page-hero {
-      background: #fff8f2;
+      background: linear-gradient(135deg, #fff8f2 0%, #fff3e8 100%);
       border: 1px solid #f0d9c8;
       border-radius: 16px;
       padding: 22px 28px 22px 32px;
@@ -578,8 +676,24 @@
       color: var(--text);
       box-shadow: 0 1px 4px rgba(80,30,10,0.06);
     }
-    .page-hero::before { display: none; }
-    .page-hero::after  { display: none; }
+    .page-hero::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      background: rgba(249,115,22,0.07);
+      pointer-events: none;
+    }
+    .page-hero::after {
+      content: '';
+      position: absolute;
+      bottom: -30px; right: 100px;
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      background: rgba(249,115,22,0.05);
+      pointer-events: none;
+    }
     .page-hero-accent {
       position: absolute;
       top: 0; left: 0;
@@ -618,6 +732,19 @@
     /* ══════════════════════════════════════
        RESPONSIVE
     ══════════════════════════════════════ */
+    @media (min-width: 1200px) {
+      .sidebar { width: 280px; }
+      .content-area { margin-left: 280px; }
+      .sidebar-brand { padding: 26px 24px; gap: 14px; }
+      .logo { width: 44px; height: 44px; font-size: 1.15rem; border-radius: 12px; }
+      .brand-name { font-size: 1rem; }
+      .brand-sub { font-size: 0.74rem; }
+      .sidebar-nav { padding: 18px 12px; gap: 4px; }
+      .nav-item { font-size: 0.95rem; padding: 11px 16px; border-radius: 10px; }
+      .nav-section-label { font-size: 0.68rem; padding: 12px 12px 6px; }
+      .sidebar-footer { padding: 18px 20px; }
+      .sidebar-footer #session-info { font-size: 0.92rem; color: rgba(255,255,255,0.92); font-weight: 500; }
+    }
     @media (min-width: 1400px) {
       main { padding: 36px 40px; }
       .stat-card { padding: 26px 28px; }

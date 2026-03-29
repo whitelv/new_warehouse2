@@ -32,6 +32,10 @@
   </nav>
   <div class="sidebar-footer">
     <div id="session-info" style="font-size:0.78rem; color:rgba(255,255,255,0.6);">Не авторизовано</div>
+    <div class="esp32-status" id="esp32-status">
+      <span class="esp32-dot" id="esp32-dot"></span>
+      <span id="esp32-label">ESP32 —</span>
+    </div>
   </div>
 </aside>
 
@@ -85,7 +89,13 @@
 
   <!-- ══ ІСТОРІЯ ══ -->
   <div id="page-history" class="page">
-    <div class="table-wrap">
+    <div class="page-hero" style="margin-bottom:0; border-radius:14px 14px 0 0; border-bottom:none;">
+      <div class="page-hero-accent"></div>
+      <div class="page-hero-title">Журнал операцій</div>
+      <div class="page-hero-sub">Всі рухи товарів на складі</div>
+      <div class="history-chips" id="history-chips"></div>
+    </div>
+    <div class="table-wrap" style="border-radius:0 0 14px 14px;">
       <div class="table-header">
         <h3>Журнал операцій</h3>
         <button class="btn btn-danger admin-only" onclick="clearHistory()" disabled>Очистити все</button>

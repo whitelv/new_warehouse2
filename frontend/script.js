@@ -244,12 +244,19 @@
     const isAdmin = currentSession && currentSession.role === 'admin';
     tbody.innerHTML = data.map(p => {
       const isLow = p.current_stock < p.min_stock;
+      const pct = Math.min(100, Math.round((p.current_stock / Math.max(p.min_stock * 2, 1)) * 100));
+      const barColor = isLow ? '#dc2626' : pct < 70 ? '#d97706' : '#059669';
       return `
         <tr>
           <td>${p.name}</td>
           <td><code>${p.barcode}</code></td>
           <td>${p.unit_weight} г</td>
-          <td>${p.current_stock}</td>
+          <td>
+            <div class="stock-cell">
+              <span>${p.current_stock}</span>
+              <div class="stock-bar-wrap"><div class="stock-bar-fill" style="width:${pct}%;background:${barColor};"></div></div>
+            </div>
+          </td>
           <td>${p.min_stock}</td>
           <td>${isLow ? '<span class="badge low">⚠ Мало</span>' : '<span class="badge in">✓ Норма</span>'}</td>
           <td>
@@ -401,7 +408,21 @@
     const res = await fetch(API + '/operations/?limit=500');
     allOperations = await res.json();
     applyHistoryFilter();
+
+    // Today's chips
+    const today = new Date().toISOString().slice(0, 10);
+    const todayOps = allOperations.filter(o => (o.timestamp || '').slice(0, 10) === today);
+    const todayIn  = todayOps.filter(o => o.type === 'incoming').length;
+    const todayOut = todayOps.filter(o => o.type === 'outgoing').length;
+    const chips = document.getElementById('history-chips');
+    if (chips) chips.innerHTML = `
+      <span class="h-chip">📋 Всього: ${allOperations.length}</span>
+      <span class="h-chip">📅 Сьогодні: ${todayOps.length}</span>
+      <span class="h-chip green">▲ Прихід сьогодні: ${todayIn}</span>
+      <span class="h-chip red">▼ Витрата сьогодні: ${todayOut}</span>
+    `;
   }
+
 
   function applyHistoryFilter() {
     const typeFilter = document.getElementById('filter-type').value;
@@ -1104,6 +1125,30 @@
       }
     });
   });
+
+  // ── ESP32 статус ─────────────────────────────────────
+  async function checkESP32Status() {
+    const dot   = document.getElementById('esp32-dot');
+    const label = document.getElementById('esp32-label');
+    if (!dot || !label) return;
+    try {
+      const res = await fetch(API + '/weight/current/', { signal: AbortSignal.timeout(3000) });
+      const data = await res.json();
+      const w = parseFloat(data.weight);
+      if (!isNaN(w)) {
+        dot.className = 'esp32-dot online';
+        label.textContent = `ESP32 · ${w.toFixed(1)} г`;
+      } else {
+        dot.className = 'esp32-dot offline';
+        label.textContent = 'ESP32 · офлайн';
+      }
+    } catch(e) {
+      dot.className = 'esp32-dot offline';
+      label.textContent = 'ESP32 · офлайн';
+    }
+  }
+  checkESP32Status();
+  setInterval(checkESP32Status, 5000);
 
   // ── Старт ────────────────────────────────────────────
   checkSession();
