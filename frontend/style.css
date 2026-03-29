@@ -827,20 +827,20 @@
         overflow-y: auto;
       }
       /* History page — фіксована висота, скрол лише у таблиці */
-      #page-history {
+      #page-history.active {
         height: calc(100dvh - 54px - 24px);
         display: flex;
         flex-direction: column;
         overflow: hidden;
       }
-      #page-history .table-wrap {
+      #page-history.active .table-wrap {
         flex: 1;
         overflow: hidden;
         display: flex;
         flex-direction: column;
         border-radius: 0 0 14px 14px;
       }
-      #page-history .table-scroll {
+      #page-history.active .table-scroll {
         flex: 1;
         overflow-y: auto;
         overflow-x: auto;
