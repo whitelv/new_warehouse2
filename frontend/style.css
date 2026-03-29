@@ -430,7 +430,7 @@
     }
     .form-group input[readonly] { color: var(--text2); }
     /* Рівна ширина кнопок Сканувати/Зважити у формах */
-    .form-group .btn { width: 120px; flex-shrink: 0; }
+    .form-group .btn { width: 120px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     /* Блок скролу сторінки коли відкрито модал */
     body:has(.modal-overlay.open) { overflow: hidden; }
     .modal-actions {

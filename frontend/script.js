@@ -561,7 +561,7 @@
   function pollStableWeight(minWeight, onStable, onTimeout, btnId, statusId) {
     const btn    = btnId ? document.getElementById(btnId) : null;
     const status = statusId ? document.getElementById(statusId) : null;
-    if (btn) { btn.textContent = '⏳ Чекаю стабілізації...'; btn.disabled = true; }
+    if (btn) { btn.textContent = '⏳ Зважую...'; btn.disabled = true; }
     if (status) { status.style.color = '#63b3ed'; status.textContent = '⏳ Поставте товар на ваги та чекайте автоматичного збереження...'; }
 
     if (weighPollInterval) { clearInterval(weighPollInterval); weighPollInterval = null; }
