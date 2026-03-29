@@ -341,11 +341,14 @@
       background: transparent;
       padding: 0;
       font-size: 0.82rem;
-      color: var(--text);
+      color: transparent;
       font-family: inherit;
       cursor: pointer;
     }
+    .filter-date-wrap input[type="date"].has-value { color: var(--text); }
     .filter-date-wrap input[type="date"]:focus { outline: none; }
+    select:disabled { opacity: 0.4; cursor: not-allowed; }
+    .filter-date-wrap:has(input:disabled) { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 
     /* ══════════════════════════════════════
        BUTTONS
@@ -765,6 +768,33 @@
     .stat-card .lbl { position: relative; z-index: 1; }
 
     /* ══════════════════════════════════════
+       SCROLL-IN-BLOCK — PRODUCTS & WORKERS
+    ══════════════════════════════════════ */
+    #page-products.active, #page-workers.active {
+      display: flex;
+      flex-direction: column;
+      height: calc(100dvh - 54px - 56px);
+      overflow: hidden;
+    }
+    #page-products.active .page-hero,
+    #page-products.active .stats-grid { flex-shrink: 0; }
+    #page-products.active .table-wrap,
+    #page-workers.active .table-wrap {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    #page-products.active .table-scroll,
+    #page-workers.active .table-scroll {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* ══════════════════════════════════════
        RESPONSIVE
     ══════════════════════════════════════ */
     @media (min-width: 1200px) {
@@ -796,9 +826,11 @@
       .page-hero-sub { font-size: 0.88rem; }
       .topbar { height: 60px; padding: 0 36px; }
       .topbar-title { font-size: 1.1rem; }
+      #page-products.active, #page-workers.active { height: calc(100dvh - 60px - 72px); }
     }
     @media (max-width: 900px) {
       main { padding: 18px; }
+      #page-products.active, #page-workers.active { height: calc(100dvh - 54px - 36px); }
     }
     @media (max-width: 768px) {
       .sidebar { transform: translateX(-100%); }
@@ -826,6 +858,8 @@
         height: calc(100dvh - 54px - 24px);
         overflow-y: auto;
       }
+      /* Products & workers — mobile height override */
+      #page-products.active, #page-workers.active { height: calc(100dvh - 54px - 24px); }
       /* History page — фіксована висота, скрол лише у таблиці */
       #page-history.active {
         height: calc(100dvh - 54px - 24px);

@@ -93,23 +93,23 @@
         </div>
       </div>
       <div class="filter-bar" style="padding:0; border:none; margin-top:14px;">
-        <select id="filter-type" onchange="applyHistoryFilter()">
+        <select id="filter-type" class="auth-only" onchange="applyHistoryFilter()" disabled>
           <option value="">Всі типи</option>
           <option value="incoming">Прихід</option>
           <option value="outgoing">Витрата</option>
         </select>
-        <select id="filter-worker" onchange="applyHistoryFilter()">
+        <select id="filter-worker" class="auth-only" onchange="applyHistoryFilter()" disabled>
           <option value="">Всі працівники</option>
         </select>
         <label class="filter-date-wrap">
           <span class="filter-date-label">Дата</span>
-          <input type="date" id="filter-date" onchange="applyHistoryFilter()">
+          <input type="date" id="filter-date" class="auth-only" onchange="applyHistoryFilter()" disabled>
         </label>
-        <select id="filter-sort" onchange="applyHistoryFilter()">
+        <select id="filter-sort" class="auth-only" onchange="applyHistoryFilter()" disabled>
           <option value="newest">Найновіші</option>
           <option value="oldest">Найстаріші</option>
         </select>
-        <button class="btn btn-outline" onclick="clearHistoryFilters()" style="font-size:0.85rem; padding:7px 14px;">Скинути</button>
+        <button class="btn btn-outline auth-only" onclick="clearHistoryFilters()" style="font-size:0.85rem; padding:7px 14px;" disabled>Скинути</button>
         <button class="btn btn-danger admin-only" onclick="clearHistory()" disabled>Очистити все</button>
       </div>
     </div>

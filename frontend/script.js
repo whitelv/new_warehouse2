@@ -416,6 +416,7 @@
     const typeFilter = document.getElementById('filter-type').value;
     const workerFilter = document.getElementById('filter-worker').value;
     const dateFilter = document.getElementById('filter-date').value;
+    document.getElementById('filter-date').classList.toggle('has-value', !!dateFilter);
     const sortOrder = document.getElementById('filter-sort').value;
     const tbody = document.getElementById('history-tbody');
 
