@@ -444,7 +444,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: calc(100vh - 110px);
+      height: calc(100dvh - 54px - 56px);
+      overflow: hidden;
       position: relative;
     }
     /* Декоративні кола за action-card */
@@ -820,6 +821,50 @@
       .btn { min-height: 42px; }
       .form-group input, .form-group select { font-size: 1rem; padding: 11px 13px; }
       .action-card { padding: 30px 22px; border-radius: 14px; }
+      /* Action-page на мобільному — точна висота без скролу */
+      .action-page {
+        height: calc(100dvh - 54px - 24px);
+        overflow-y: auto;
+      }
+      /* History page — фіксована висота, скрол лише у таблиці */
+      #page-history {
+        height: calc(100dvh - 54px - 24px);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      #page-history .table-wrap {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        border-radius: 0 0 14px 14px;
+      }
+      #page-history .table-scroll {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      /* Компактні фільтри на мобільному — сітка 2 колонки */
+      .history-head { padding: 14px 14px 12px; }
+      .history-head .filter-bar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .filter-bar select,
+      .filter-bar .filter-date-wrap,
+      .filter-bar .btn-outline {
+        font-size: 0.76rem;
+        padding: 6px 8px;
+        min-height: unset;
+        height: 36px;
+        box-sizing: border-box;
+      }
+      .filter-bar .btn-outline { width: 100%; }
+      .filter-date-label { font-size: 0.72rem; }
     }
     @media (max-width: 480px) {
       .stats-grid { gap: 8px; }
