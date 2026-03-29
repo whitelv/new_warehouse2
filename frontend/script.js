@@ -117,7 +117,7 @@
   async function startCamera(videoId, callback) {
     stopCamera();
     const video = document.getElementById(videoId);
-    video.style.display = 'block';
+    video.style.display = 'none';
     try {
       cameraStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: 'environment' } }
@@ -133,6 +133,7 @@
 
       video.srcObject = cameraStream;
       await video.play();
+      video.style.display = 'block';
       if (!zxingReader) zxingReader = new ZXing.BrowserMultiFormatReader();
       zxingReader.decodeFromStream(cameraStream, video, (result, err) => {
         if (result) {
