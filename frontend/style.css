@@ -768,18 +768,24 @@
     .stat-card .lbl { position: relative; z-index: 1; }
 
     /* ══════════════════════════════════════
-       SCROLL-IN-BLOCK — PRODUCTS & WORKERS
+       SCROLL-IN-BLOCK — ALL PAGES
     ══════════════════════════════════════ */
-    #page-products.active, #page-workers.active {
-      display: flex;
-      flex-direction: column;
+    #page-products.active, #page-workers.active,
+    #page-history.active,
+    #page-weighing.active, #page-outgoing.active {
       height: calc(100dvh - 54px - 56px);
       overflow: hidden;
     }
+    #page-products.active, #page-workers.active, #page-history.active {
+      display: flex;
+      flex-direction: column;
+    }
     #page-products.active .page-hero,
     #page-products.active .stats-grid { flex-shrink: 0; }
+    #page-history.active .history-head { flex-shrink: 0; }
     #page-products.active .table-wrap,
-    #page-workers.active .table-wrap {
+    #page-workers.active .table-wrap,
+    #page-history.active .table-wrap {
       flex: 1;
       min-height: 0;
       overflow: hidden;
@@ -787,7 +793,8 @@
       flex-direction: column;
     }
     #page-products.active .table-scroll,
-    #page-workers.active .table-scroll {
+    #page-workers.active .table-scroll,
+    #page-history.active .table-scroll {
       flex: 1;
       overflow-y: auto;
       overflow-x: auto;
@@ -826,11 +833,13 @@
       .page-hero-sub { font-size: 0.88rem; }
       .topbar { height: 60px; padding: 0 36px; }
       .topbar-title { font-size: 1.1rem; }
-      #page-products.active, #page-workers.active { height: calc(100dvh - 60px - 72px); }
+      #page-products.active, #page-workers.active,
+      #page-history.active, #page-weighing.active, #page-outgoing.active { height: calc(100dvh - 60px - 72px); }
     }
     @media (max-width: 900px) {
       main { padding: 18px; }
-      #page-products.active, #page-workers.active { height: calc(100dvh - 54px - 36px); }
+      #page-products.active, #page-workers.active,
+      #page-history.active, #page-weighing.active, #page-outgoing.active { height: calc(100dvh - 54px - 36px); }
     }
     @media (max-width: 768px) {
       .sidebar { transform: translateX(-100%); }
@@ -858,28 +867,10 @@
         height: calc(100dvh - 54px - 24px);
         overflow-y: auto;
       }
-      /* Products & workers — mobile height override */
-      #page-products.active, #page-workers.active { height: calc(100dvh - 54px - 24px); }
-      /* History page — фіксована висота, скрол лише у таблиці */
-      #page-history.active {
-        height: calc(100dvh - 54px - 24px);
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-      }
-      #page-history.active .table-wrap {
-        flex: 1;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        border-radius: 0 0 14px 14px;
-      }
-      #page-history.active .table-scroll {
-        flex: 1;
-        overflow-y: auto;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-      }
+      /* Mobile height overrides */
+      #page-products.active, #page-workers.active,
+      #page-history.active { height: calc(100dvh - 54px - 24px); }
+      #page-weighing.active, #page-outgoing.active { height: auto; overflow: visible; }
       /* Компактні фільтри на мобільному — сітка 2 колонки */
       .history-head { padding: 14px 14px 12px; }
       .history-head .filter-bar {
