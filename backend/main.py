@@ -356,3 +356,8 @@ async def get_stats():
         "low_stock_count": len(low_stock),
         "low_stock_items": low_stock
     }
+
+@app.get("/debug/mongo")
+async def debug_mongo():
+    from database import MONGO_URL
+    return {"mongo_url": MONGO_URL[:30] + "..."}
