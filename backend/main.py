@@ -44,6 +44,17 @@ ADMIN_WORKER = {"rfid": ADMIN_RFID, "name": "Федчишин Станіслав
 # ════════════════════════════════════════════════════════
 current_session = {"rfid": None, "name": None, "role": None}
 
+def require_auth():
+    if not current_session.get("rfid"):
+        raise HTTPException(status_code=401, detail="Authorization required")
+    return current_session
+
+def require_admin():
+    require_auth()
+    if current_session.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return current_session
+
 @app.get("/session/")
 async def get_session():
     return current_session
@@ -68,6 +79,7 @@ def fix_id(doc):
 # ════════════════════════════════════════════════════════
 @app.get("/products/")
 async def get_all_products():
+    require_auth()
     cursor = products_col.find()
     result = []
     async for doc in cursor:
@@ -76,6 +88,7 @@ async def get_all_products():
 
 @app.get("/products/barcode/{barcode}")
 async def get_product_by_barcode(barcode: str):
+    require_auth()
     doc = await products_col.find_one({"barcode": barcode})
     if not doc:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -83,6 +96,7 @@ async def get_product_by_barcode(barcode: str):
 
 @app.post("/products/")
 async def create_product(product: Product):
+    require_admin()
     existing = await products_col.find_one({"barcode": product.barcode})
     if existing:
         raise HTTPException(status_code=400, detail="Product with this barcode already exists")
@@ -91,6 +105,7 @@ async def create_product(product: Product):
 
 @app.patch("/products/{barcode}")
 async def update_product(barcode: str, data: ProductUpdate):
+    require_auth()
     update = {k: v for k, v in data.dict().items() if v is not None}
     if not update:
         raise HTTPException(status_code=400, detail="No fields to update")
@@ -101,6 +116,7 @@ async def update_product(barcode: str, data: ProductUpdate):
 
 @app.delete("/products/{barcode}")
 async def delete_product(barcode: str):
+    require_admin()
     result = await products_col.delete_one({"barcode": barcode})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -111,6 +127,7 @@ async def delete_product(barcode: str):
 # ════════════════════════════════════════════════════════
 @app.get("/operations/")
 async def get_operations(limit: int = 50):
+    require_auth()
     cursor = operations_col.find().sort("timestamp", -1).limit(limit)
     result = []
     async for doc in cursor:
@@ -119,11 +136,13 @@ async def get_operations(limit: int = 50):
 
 @app.delete("/operations/")
 async def clear_operations():
+    require_admin()
     await operations_col.delete_many({})
     return {"message": "History cleared"}
 
 @app.post("/operations/")
 async def create_incoming_operation(op: Operation):
+    require_auth()
     product = await products_col.find_one({"barcode": op.barcode})
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -139,6 +158,7 @@ async def create_incoming_operation(op: Operation):
 
 @app.post("/operations/outgoing/")
 async def create_outgoing_operation(op: OutgoingOperation):
+    require_auth()
     product = await products_col.find_one({"barcode": op.barcode})
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -163,6 +183,7 @@ async def create_outgoing_operation(op: OutgoingOperation):
 # ════════════════════════════════════════════════════════
 @app.get("/workers/")
 async def get_workers():
+    require_auth()
     result = [ADMIN_WORKER.copy()]
     cursor = workers_col.find()
     async for doc in cursor:
@@ -189,6 +210,7 @@ async def get_worker_by_rfid(rfid: str):
 
 @app.post("/workers/")
 async def create_worker(worker: Worker):
+    require_admin()
     if worker.rfid.upper() == ADMIN_RFID:
         raise HTTPException(status_code=400, detail="This RFID is reserved for admin")
     existing = await workers_col.find_one({"rfid": worker.rfid.upper()})
@@ -202,6 +224,7 @@ async def create_worker(worker: Worker):
 
 @app.delete("/workers/{rfid}")
 async def delete_worker(rfid: str):
+    require_admin()
     if rfid.upper() == ADMIN_RFID:
         raise HTTPException(status_code=400, detail="Cannot delete admin")
     result = await workers_col.delete_one({"rfid": rfid})
@@ -320,6 +343,7 @@ async def weigh_confirm():
 # ════════════════════════════════════════════════════════
 @app.get("/stats/")
 async def get_stats():
+    require_auth()
     total_products = await products_col.count_documents({})
     total_operations = await operations_col.count_documents({})
     low_stock_cursor = products_col.find({"$expr": {"$lt": ["$current_stock", "$min_stock"]}})

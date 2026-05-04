@@ -5,6 +5,15 @@
   let currentSession = null;
 
   // ── Сесія ────────────────────────────────────────────
+  function isAuthenticated() {
+    return !!(currentSession && currentSession.rfid);
+  }
+
+  function getActivePageName() {
+    const active = document.querySelector('.page.active');
+    return active ? active.id.replace('page-', '') : 'products';
+  }
+
   async function checkSession() {
     try {
       const res = await fetch(API + '/session/');
@@ -16,7 +25,11 @@
         currentSession = null;
         updateSessionUI(null);
       }
-    } catch(e) {}
+    } catch(e) {
+      currentSession = null;
+      updateSessionUI(null);
+    }
+    return currentSession;
   }
 
   let loginPoll = null;
@@ -41,6 +54,23 @@
     document.getElementById('nav-workers').style.display = isAdmin ? '' : 'none';
     document.querySelectorAll('.admin-only').forEach(el => { el.disabled = !isAdmin; });
     document.querySelectorAll('.auth-only').forEach(el => { el.disabled = !isAuth; });
+
+    if (!isAuth) {
+      showProductsAuthRequired();
+      showHistoryAuthRequired();
+    }
+  }
+
+  function refreshProtectedPage() {
+    const page = getActivePageName();
+    if (page === 'products') {
+      if (isAuthenticated()) loadProducts();
+      else showProductsAuthRequired();
+    }
+    if (page === 'history') {
+      if (isAuthenticated()) loadHistory();
+      else showHistoryAuthRequired();
+    }
   }
 
   async function handleLoginLogout() {
@@ -52,6 +82,7 @@
       sendOLED("Scan RFID", "to login");
       currentSession = null;
       updateSessionUI(null);
+      refreshProtectedPage();
       return;
     }
 
@@ -87,6 +118,7 @@
         await fetch(API + '/rfid/login-mode/', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({active: false}) });
         currentSession = data;
         updateSessionUI(data);
+        refreshProtectedPage();
         sendOLED("Access Granted", toLatин(data.name), "Use website");
         showAlert('alert-area', `✅ Вхід виконано: ${data.name}`, 'success');
       } else if (elapsed >= 30000) {
@@ -160,8 +192,14 @@
     const titleEl = document.getElementById('page-title');
     if (titleEl) titleEl.textContent = titles[name] || name;
 
-    if (name === 'products')  loadProducts();
-    if (name === 'history')   loadHistory();
+    if (name === 'products') {
+      if (isAuthenticated()) loadProducts();
+      else showProductsAuthRequired();
+    }
+    if (name === 'history') {
+      if (isAuthenticated()) loadHistory();
+      else showHistoryAuthRequired();
+    }
     if (name === 'workers')   loadWorkers();
 
     closeSidebar();
@@ -199,8 +237,32 @@
   }
 
   // ── ТОВАРИ ───────────────────────────────────────────
+  function showProductsAuthRequired() {
+    productsCache = {};
+    const statsGrid = document.getElementById('stats-grid');
+    const tbody = document.getElementById('products-tbody');
+    if (statsGrid) {
+      statsGrid.innerHTML = '<div class="loading">Потрібна авторизація</div>';
+    }
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#718096;padding:20px;">Потрібна авторизація</td></tr>';
+    }
+  }
+
   async function loadProducts() {
-    fetch(API + '/stats/').then(r => r.json()).then(data => {
+    if (!isAuthenticated()) {
+      showProductsAuthRequired();
+      return;
+    }
+
+    const statsRes = await fetch(API + '/stats/');
+    if (statsRes.status === 401) {
+      currentSession = null;
+      updateSessionUI(null);
+      return;
+    }
+    if (statsRes.ok) {
+      const data = await statsRes.json();
       document.getElementById('stats-grid').innerHTML = `
         <div class="stat-card">
           <div class="stat-card-icon blue">
@@ -230,8 +292,13 @@
           <div class="lbl">Критичних залишків</div>
         </div>
       `;
-    });
+    }
     const res = await fetch(API + '/products/');
+    if (res.status === 401) {
+      currentSession = null;
+      updateSessionUI(null);
+      return;
+    }
     const data = await res.json();
     productsCache = {};
     data.forEach(p => productsCache[p.barcode] = p.name);
@@ -381,14 +448,42 @@
   let allOperations = [];
   let workersCache = {};
 
+  function showHistoryAuthRequired() {
+    allOperations = [];
+    workersCache = {};
+    const tbody = document.getElementById('history-tbody');
+    const filterWorker = document.getElementById('filter-worker');
+    if (filterWorker) {
+      filterWorker.innerHTML = '<option value="">Всі працівники</option>';
+    }
+    if (tbody) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#718096;padding:20px;">Потрібна авторизація</td></tr>';
+    }
+  }
+
   async function loadHistory() {
+    if (!isAuthenticated()) {
+      showHistoryAuthRequired();
+      return;
+    }
+
     if (Object.keys(productsCache).length === 0) {
       const res = await fetch(API + '/products/');
+      if (res.status === 401) {
+        currentSession = null;
+        updateSessionUI(null);
+        return;
+      }
       const data = await res.json();
       data.forEach(p => productsCache[p.barcode] = p.name);
     }
 
     const wRes = await fetch(API + '/workers/');
+    if (wRes.status === 401) {
+      currentSession = null;
+      updateSessionUI(null);
+      return;
+    }
     const workers = await wRes.json();
     workersCache = {};
     workers.forEach(w => { workersCache[w.rfid] = w.name; });
@@ -406,6 +501,11 @@
     filterWorker.value = prevWorker;
 
     const res = await fetch(API + '/operations/?limit=500');
+    if (res.status === 401) {
+      currentSession = null;
+      updateSessionUI(null);
+      return;
+    }
     allOperations = await res.json();
     applyHistoryFilter();
 
@@ -1140,5 +1240,9 @@
   setInterval(checkESP32Status, 5000);
 
   // ── Старт ────────────────────────────────────────────
-  checkSession();
-  loadProducts();
+  async function initApp() {
+    await checkSession();
+    refreshProtectedPage();
+  }
+
+  initApp();
