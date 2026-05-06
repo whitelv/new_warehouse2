@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-from datetime import datetime
+from datetime import datetime, timezone
 from bson import ObjectId
 import os
 
@@ -100,13 +100,13 @@ async def create_product(product: Product):
     existing = await products_col.find_one({"barcode": product.barcode})
     if existing:
         raise HTTPException(status_code=400, detail="Product with this barcode already exists")
-    await products_col.insert_one(product.dict())
+    await products_col.insert_one(product.model_dump())
     return {"message": "Product created", "barcode": product.barcode}
 
 @app.patch("/products/{barcode}")
 async def update_product(barcode: str, data: ProductUpdate):
     require_auth()
-    update = {k: v for k, v in data.dict().items() if v is not None}
+    update = {k: v for k, v in data.model_dump().items() if v is not None}
     if not update:
         raise HTTPException(status_code=400, detail="No fields to update")
     result = await products_col.update_one({"barcode": barcode}, {"$set": update})
@@ -146,9 +146,9 @@ async def create_incoming_operation(op: Operation):
     product = await products_col.find_one({"barcode": op.barcode})
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    op.timestamp = datetime.utcnow()
+    op.timestamp = datetime.now(timezone.utc)
     op.type = "incoming"
-    await operations_col.insert_one(op.dict())
+    await operations_col.insert_one(op.model_dump())
     new_stock = product["current_stock"] + op.quantity
     await products_col.update_one({"barcode": op.barcode}, {"$set": {"current_stock": new_stock}})
     warning = None
@@ -168,7 +168,7 @@ async def create_outgoing_operation(op: OutgoingOperation):
         "barcode": op.barcode, "quantity": op.quantity,
         "gross_weight": 0, "tare_weight": 0,
         "worker_rfid": op.worker_rfid, "type": "outgoing",
-        "timestamp": datetime.utcnow()
+        "timestamp": datetime.now(timezone.utc)
     }
     await operations_col.insert_one(operation)
     new_stock = product["current_stock"] - op.quantity
@@ -216,7 +216,7 @@ async def create_worker(worker: Worker):
     existing = await workers_col.find_one({"rfid": worker.rfid.upper()})
     if existing:
         raise HTTPException(status_code=400, detail="Worker with this RFID already exists")
-    data = worker.dict()
+    data = worker.model_dump()
     data["rfid"] = data["rfid"].upper()
     data["role"] = "storekeeper"
     await workers_col.insert_one(data)
