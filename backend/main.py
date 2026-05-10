@@ -26,6 +26,10 @@ async def style():
 async def script():
     return FileResponse(os.path.join(FRONTEND_DIR, "script.js"), media_type="application/javascript")
 
+@app.get("/healthz")
+async def healthcheck():
+    return {"status": "ok"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

@@ -40,6 +40,30 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 - Вказати IP комп'ютера у змінній `serverURL` у `esp_mfr.ino`
 - Прошити через Arduino IDE
 
+## Deploy On Render
+
+This repo can be deployed as a single Render web service because the FastAPI app
+also serves the files from `frontend/`.
+
+### Required environment variables
+
+- `MONGO_URL` - your MongoDB connection string
+- `DB_NAME` - optional, defaults to `warehouse_db`
+
+### Render settings
+
+- Root directory: `backend`
+- Build command: `pip install -r requirements.txt`
+- Start command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+
+You can also use the included `render.yaml` blueprint from the repo root.
+
+### After deploy
+
+- Open your Render URL, for example `https://your-service.onrender.com`
+- Update `esp32/esp_mfr/esp_mfr.ino` so `serverURL` points to that URL
+- If you later move the frontend to Netlify or Vercel, set its API base URL to the same backend URL
+
 ## Сценарій роботи
 
 1. Працівник прикладає RFID картку → авторизація
