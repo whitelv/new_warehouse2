@@ -870,12 +870,6 @@
     const currentStock = product.current_stock;
 
     const status = document.getElementById('out-weigh-status');
-    if (!(unitW > 0)) {
-      status.style.color = '#fc8181';
-      status.textContent = '❌ Для цього товару не задана маса одиниці. Заповніть "Одиниця (г)" у картці товару.';
-      sendOLED("Set product", "unit weight");
-      return;
-    }
     status.style.color = '#f6ad55';
     status.textContent = `⏳ Чекаю стабілізації ваги... (одиниця = ${unitW}г, на складі: ${currentStock} шт)`;
     sendOLED("Put items", "wait for stable...");
@@ -885,11 +879,7 @@
       const qty = Math.round(avg / unitW);
       document.getElementById('out-qty').value = qty;
       status.style.color = '#68d391';
-      status.textContent = `✅ Маса: ${avg.toFixed(1)} г / ${unitW} г = ${qty} шт (на складі: ${currentStock} шт)`;
-      if (qty <= 0) {
-        status.style.color = '#fc8181';
-        status.textContent = `❌ Замала вага для списання: ${avg.toFixed(1)} г / ${unitW} г = ${qty} шт`;
-      }
+      status.textContent = `✅ Маса: ${avg.toFixed(1)}г → ${qty} шт (на складі: ${currentStock} шт)`;
       if (qty > currentStock) {
         status.style.color = '#fc8181';
         status.textContent += ' ⚠️ Перевищує залишок!';
@@ -934,10 +924,6 @@
     const rfid = currentSession ? currentSession.rfid : '';
     if (!barcode || !qty) {
       showAlert('outgoing-alert', 'Заповніть всі поля!', 'error');
-      return;
-    }
-    if (qty <= 0) {
-      showAlert('outgoing-alert', '❌ Кількість для списання повинна бути більшою за 0.', 'error');
       return;
     }
     // Перевірка залишку перед відправкою
