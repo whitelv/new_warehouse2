@@ -339,6 +339,16 @@
   let weighUnitWeight = 0;
   let weighTare = 0;
 
+  function getWeighNetWeight(gross) {
+    return Math.max(0, gross - weighTare);
+  }
+
+  function getWeighQtyLabel(gross) {
+    if (!(weighUnitWeight > 0)) return 'Set product weight';
+    const net = getWeighNetWeight(gross);
+    return `${Math.round(net / weighUnitWeight)} шт`;
+  }
+
   function openAddProduct() {
     document.getElementById('p-barcode').value = '';
     document.getElementById('p-name').value = '';
@@ -766,13 +776,20 @@
     sendOLED("Put full box", "on scale");
 
     pollStableWeight(5, (avg) => {
-      const qty = weighUnitWeight > 0 ? Math.round(avg / weighUnitWeight) : '?';
+      const net = getWeighNetWeight(avg);
+      const qtyLabel = getWeighQtyLabel(avg);
       document.getElementById('weigh-gross').value = avg.toFixed(1);
       grossStatus.style.color  = '#68d391';
-      grossStatus.textContent  = `✅ Вага: ${avg.toFixed(1)} г`;
-      document.getElementById('weigh-live-qty').textContent = `${avg.toFixed(1)} г → ${qty} шт`;
-      document.getElementById('weigh-save-btn').disabled = false;
-      sendOLED(avg.toFixed(0) + "g", qty + " pcs", "Press Save");
+      grossStatus.textContent  = `✅ Вага брутто: ${avg.toFixed(1)} г, нетто: ${net.toFixed(1)} г`;
+      document.getElementById('weigh-live-qty').textContent = `${net.toFixed(1)} г → ${qtyLabel}`;
+      document.getElementById('weigh-save-btn').disabled = !(weighUnitWeight > 0);
+      if (weighUnitWeight > 0) {
+        sendOLED(net.toFixed(0) + "g", qtyLabel, "Press Save");
+      } else {
+        sendOLED(net.toFixed(0) + "g", "Set product weight", "Press Save");
+        grossStatus.style.color = '#fc8181';
+        grossStatus.textContent = '❌ Для цього товару не задана маса одиниці. Заповніть "Одиниця (г)".';
+      }
     }, null, 'weigh-gross-btn', 'weigh-gross-status');
   }
 
@@ -783,17 +800,22 @@
       showAlert('weighing-alert', 'Спочатку відскануйте QR і зважте товар!', 'error');
       return;
     }
-    const qty  = weighUnitWeight > 0 ? Math.round(gross / weighUnitWeight) : 1;
+    if (!(weighUnitWeight > 0)) {
+      showAlert('weighing-alert', '❌ Для цього товару не задана маса одиниці. Вкажіть "Одиниця (г)" у картці товару.', 'error');
+      return;
+    }
+    const net = getWeighNetWeight(gross);
+    const qty  = Math.round(net / weighUnitWeight);
     const rfid = currentSession ? currentSession.rfid : '';
     const res  = await fetch(API + '/operations/', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ barcode, quantity: qty, gross_weight: gross, tare_weight: 0, worker_rfid: rfid, type: 'incoming' })
+      body: JSON.stringify({ barcode, quantity: qty, gross_weight: gross, tare_weight: weighTare, worker_rfid: rfid, type: 'incoming' })
     });
     if (res.ok) {
       const data = await res.json();
       const warn = data.warning ? ' ⚠️ ' + data.warning : '';
-      showAlert('weighing-alert', `✅ Збережено: ${qty} шт (${gross.toFixed(1)} г)${warn}`, 'success');
+      showAlert('weighing-alert', `✅ Збережено: ${qty} шт (нетто ${net.toFixed(1)} г)${warn}`, 'success');
       closeModal('modal-weighing');
       loadProducts();
     } else {
