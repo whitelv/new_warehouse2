@@ -20,9 +20,9 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 HX711_ADC LoadCell(HX711_DT, HX711_SCK);
 
-const char* ssid      = "esp32";
-const char* password  = "qwertyui";
-const char* serverURL = "https://warehouse-1w.onrender.com";
+const char* ssid      = "My WiFi";
+const char* password  = "84868725";
+const char* serverURL = "https://warehouse-app-t4op.onrender.com";
 
 bool isAuthorized = false;
 String workerRFID = "";
@@ -40,10 +40,6 @@ float  unitWeight     = 0.0;
 float  tareWeight     = 0.0;
 
 bool weighModeActive = false;
-
-void logLine(const String& message) {
-  Serial.println(message);
-}
 
 // Яскравість OLED: 4 рівні, перемикаються кнопкою поза зважуванням
 const uint8_t brightLevels[] = { 5, 50, 150, 255 };
@@ -218,12 +214,9 @@ void showWeighOLED() {
 // ════════════════════════════════════════════════════════
 bool fetchProduct(String barcode) {
   HTTPClient http;
-  String url = String(serverURL) + "/products/barcode/" + barcode;
-  logLine("HTTP GET " + url);
-  http.begin(url);
+  http.begin(String(serverURL) + "/products/barcode/" + barcode);
   http.setTimeout(2000);
   int code = http.GET();
-  logLine("HTTP GET code: " + String(code));
   if (code == 200) {
     String body = http.getString();
     int ns = body.indexOf("\"name\":\"") + 8;
@@ -242,9 +235,7 @@ bool fetchProduct(String barcode) {
 
 bool saveOperation(int quantity, float grossWeight) {
   HTTPClient http;
-  String url = String(serverURL) + "/operations/";
-  logLine("HTTP POST " + url);
-  http.begin(url);
+  http.begin(String(serverURL) + "/operations/");
   http.addHeader("Content-Type", "application/json");
   String body = "{\"barcode\":\"" + currentBarcode + "\",";
   body += "\"quantity\":" + String(quantity) + ",";
@@ -253,31 +244,23 @@ bool saveOperation(int quantity, float grossWeight) {
   body += "\"worker_rfid\":\"" + workerRFID + "\",";
   body += "\"type\":\"incoming\"}";
   int code = http.POST(body);
-  logLine("HTTP POST code: " + String(code));
   http.end();
   return (code == 200 || code == 201);
 }
 
 void connectWiFi() {
-  logLine("Booting firmware");
-  logLine("Target server: " + String(serverURL));
-  logLine("Connecting to WiFi SSID: " + String(ssid));
   showOLED("Connecting WiFi...");
   WiFi.begin(ssid, password);
   int attempts = 0;
   while (WiFi.status() != WL_CONNECTED && attempts < 20) {
-    logLine("WiFi status=" + String(WiFi.status()) + " attempt=" + String(attempts + 1));
     delay(500); attempts++;
   }
   if (WiFi.status() == WL_CONNECTED) {
-    logLine("WiFi connected");
-    logLine("IP: " + WiFi.localIP().toString());
     showOLED("WiFi OK", WiFi.localIP().toString());
     delay(1500);
     showOLED("Welcome to", "Warehouse", "System");
     delay(1500);
   } else {
-    logLine("WiFi failed");
     showOLED("WiFi FAILED", "Check settings");
     delay(2000);
   }
@@ -295,8 +278,6 @@ void resetToLogin() {
 // ════════════════════════════════════════════════════════
 void setup() {
   Serial.begin(115200);
-  delay(300);
-  logLine("Serial ready at 115200");
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(BUTTON_PIN), onButtonPress, FALLING);
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { for (;;); }
@@ -331,12 +312,9 @@ void loop() {
     if (millis() - lastWaitSessionCheck > 5000) {
       lastWaitSessionCheck = millis();
       HTTPClient httpSess;
-      String sessionUrl = String(serverURL) + "/session/";
-      logLine("Polling session: " + sessionUrl);
-      httpSess.begin(sessionUrl);
+      httpSess.begin(String(serverURL) + "/session/");
       httpSess.setTimeout(2000);
       int sc = httpSess.GET();
-      logLine("Session poll code: " + String(sc));
       if (sc == 200) {
         String sb = httpSess.getString();
         if (sb.indexOf("\"rfid\":null") < 0 && sb.indexOf("\"rfid\":\"\"") < 0) {
@@ -372,7 +350,6 @@ void loop() {
     httpRegMode.begin(String(serverURL) + "/rfid/register-mode/");
     httpRegMode.setTimeout(800);
     int regCode = httpRegMode.GET();
-    logLine("Register mode code: " + String(regCode));
     String regResp = httpRegMode.getString();
     httpRegMode.end();
 
@@ -383,8 +360,7 @@ void loop() {
       httpReg.begin(String(serverURL) + "/rfid/scanned/");
       httpReg.addHeader("Content-Type", "application/json");
       httpReg.setTimeout(2000);
-      int postCode = httpReg.POST("{\"rfid\":\"" + scannedRFID + "\"}");
-      logLine("RFID register code: " + String(postCode));
+      httpReg.POST("{\"rfid\":\"" + scannedRFID + "\"}");
       httpReg.end();
       lastRegisteredRFID = scannedRFID;
       lastRegistrationTime = millis();
@@ -401,7 +377,6 @@ void loop() {
     httpLoginMode.begin(String(serverURL) + "/rfid/login-mode/");
     httpLoginMode.setTimeout(800);
     int loginCode = httpLoginMode.GET();
-    logLine("Login mode code: " + String(loginCode));
     String loginResp = httpLoginMode.getString();
     httpLoginMode.end();
 
@@ -427,7 +402,6 @@ void loop() {
     httpWorker.begin(String(serverURL) + "/workers/" + scannedRFID + "/");
     httpWorker.setTimeout(2000);
     int workerCode = httpWorker.GET();
-    logLine("Worker lookup code: " + String(workerCode));
     String workerBody = (workerCode == 200) ? httpWorker.getString() : "";
     httpWorker.end();
 
