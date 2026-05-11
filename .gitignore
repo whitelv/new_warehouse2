@@ -13,6 +13,8 @@ backend/key.pem
 # IDE
 .vscode/
 .idea/
+.pio/
+esp32/.pio/
 
 # OS
 .DS_Store

@@ -338,6 +338,10 @@
   let weighPollInterval = null;
   let weighUnitWeight = 0;
   let weighTare = 0;
+  let lastWeightSequence = 0;
+  const WEIGHT_POLL_INTERVAL_MS = 50;
+  const WEIGHT_POLL_TIMEOUT_MS = 700;
+  const ESP32_ONLINE_MAX_AGE_MS = 2000;
 
   function openAddProduct() {
     document.getElementById('p-barcode').value = '';
@@ -676,23 +680,41 @@
     let attempts = 0;
     let errors   = 0;
     let prev     = null;
+    let stableSamples = 0;
     let weightCleared = true;
-    const MAX_ATTEMPTS = 400;
+    const MAX_ATTEMPTS = 240;
     const MAX_ERRORS   = 6;
+    const STABLE_DELTA = Math.max(1.0, minWeight * 0.35);
 
     weighPollInterval = setInterval(async () => {
       attempts++;
       try {
-        const res  = await fetch(API + '/weight/current/');
+        const res  = await fetch(API + '/weight/current/', { signal: AbortSignal.timeout(WEIGHT_POLL_TIMEOUT_MS) });
         const data = await res.json();
         errors = 0;
+
+        const sequence = Number(data.sequence || 0);
+        if (sequence < lastWeightSequence) {
+          lastWeightSequence = 0;
+        }
+        if (sequence <= lastWeightSequence) {
+          return;
+        }
+        lastWeightSequence = sequence;
 
         const w = parseFloat(data.weight);
         if (!isNaN(w) && w <= minWeight) {
           weightCleared = true;
           prev = null;
+          stableSamples = 0;
         } else if (!isNaN(w) && w > minWeight && weightCleared) {
-          if (prev !== null && Math.abs(w - prev) < 3.0) {
+          if (prev !== null && Math.abs(w - prev) <= STABLE_DELTA) {
+            stableSamples++;
+          } else {
+            stableSamples = 0;
+          }
+
+          if (prev !== null && stableSamples >= 1) {
             clearInterval(weighPollInterval); weighPollInterval = null;
             stopWeigh();
             if (btn) { btn.textContent = '⚖️ Зважити'; btn.disabled = false; }
@@ -719,7 +741,7 @@
         if (status) { status.style.color = '#fc8181'; status.textContent = '❌ Час вийшов. Спробуйте ще раз.'; }
         if (onTimeout) onTimeout();
       }
-    }, 80);
+    }, WEIGHT_POLL_INTERVAL_MS);
   }
 
   async function startTareWeigh() {
@@ -1224,7 +1246,9 @@
       const res = await fetch(API + '/weight/current/', { signal: AbortSignal.timeout(3000) });
       const data = await res.json();
       const w = parseFloat(data.weight);
-      if (!isNaN(w)) {
+      const updatedAt = data.updated_at ? Date.parse(data.updated_at) : NaN;
+      const isFresh = !Number.isNaN(updatedAt) && (Date.now() - updatedAt) <= ESP32_ONLINE_MAX_AGE_MS;
+      if (!isNaN(w) && isFresh) {
         dot.className = 'esp32-dot online';
         label.textContent = 'ESP32 · онлайн';
       } else {
