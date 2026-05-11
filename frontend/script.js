@@ -338,6 +338,8 @@
   let weighPollInterval = null;
   let weighUnitWeight = 0;
   let weighTare = 0;
+  const WEIGH_POLL_INTERVAL_MS = 60;
+  const WEIGH_MAX_ATTEMPTS = 500;
 
   function openAddProduct() {
     document.getElementById('p-barcode').value = '';
@@ -408,7 +410,10 @@
       status.style.color = '#fc8181';
       status.textContent = '❌ Час вийшов. Спробуйте ще раз.';
       sendOLED("New product", "Try again");
-    }, 'weigh-btn', 'weigh-status');
+    }, 'weigh-btn', 'weigh-status', (w) => {
+      status.style.color = '#63b3ed';
+      status.textContent = `⏳ Поточна вага: ${w.toFixed(2)} г. Тримайте виріб нерухомо...`;
+    });
   }
 
   async function submitProduct() {
@@ -658,7 +663,7 @@
 
   // Спільна функція стабільного зчитування ваги
   // Адаптивний розкид: для маленьких предметів — точніше, для великих — допускаємо більше
-  function pollStableWeight(minWeight, onStable, onTimeout, btnId, statusId) {
+  function pollStableWeight(minWeight, onStable, onTimeout, btnId, statusId, onProgress = null) {
     const btn    = btnId ? document.getElementById(btnId) : null;
     const status = statusId ? document.getElementById(statusId) : null;
     if (btn) { btn.textContent = '⏳ Зважую...'; btn.disabled = true; }
@@ -677,7 +682,7 @@
     let errors   = 0;
     let prev     = null;
     let weightCleared = true;
-    const MAX_ATTEMPTS = 400;
+    const MAX_ATTEMPTS = WEIGH_MAX_ATTEMPTS;
     const MAX_ERRORS   = 6;
 
     weighPollInterval = setInterval(async () => {
@@ -688,6 +693,14 @@
         errors = 0;
 
         const w = parseFloat(data.weight);
+        if (!isNaN(w)) {
+          if (onProgress) {
+            onProgress(w);
+          } else if (status) {
+            status.style.color = '#63b3ed';
+            status.textContent = `⏳ Поточна вага: ${w.toFixed(1)} г`;
+          }
+        }
         if (!isNaN(w) && w <= minWeight) {
           weightCleared = true;
           prev = null;
@@ -719,7 +732,7 @@
         if (status) { status.style.color = '#fc8181'; status.textContent = '❌ Час вийшов. Спробуйте ще раз.'; }
         if (onTimeout) onTimeout();
       }
-    }, 80);
+    }, WEIGH_POLL_INTERVAL_MS);
   }
 
   async function startTareWeigh() {
@@ -773,7 +786,17 @@
       document.getElementById('weigh-live-qty').textContent = `${avg.toFixed(1)} г → ${qty} шт`;
       document.getElementById('weigh-save-btn').disabled = false;
       sendOLED(avg.toFixed(0) + "g", qty + " pcs", "Press Save");
-    }, null, 'weigh-gross-btn', 'weigh-gross-status');
+    }, null, 'weigh-gross-btn', 'weigh-gross-status', (w) => {
+      document.getElementById('weigh-gross').value = w.toFixed(1);
+      grossStatus.style.color = '#63b3ed';
+      grossStatus.textContent = `⏳ Поточна вага: ${w.toFixed(1)} г`;
+      if (weighUnitWeight > 0) {
+        const qty = Math.round(w / weighUnitWeight);
+        document.getElementById('weigh-live-qty').textContent = `${w.toFixed(1)} г → ~${qty} шт`;
+      } else {
+        document.getElementById('weigh-live-qty').textContent = `${w.toFixed(1)} г`;
+      }
+    });
   }
 
   async function submitWeighing() {
@@ -866,7 +889,11 @@
     }, () => {
       status.style.color = '#fc8181';
       status.textContent = '❌ Час вийшов. Спробуйте ще раз.';
-    }, 'out-weigh-btn', 'out-weigh-status');
+    }, 'out-weigh-btn', 'out-weigh-status', (w) => {
+      const qty = Math.round(w / unitW);
+      status.style.color = '#63b3ed';
+      status.textContent = `⏳ Поточна вага: ${w.toFixed(1)}г → ~${qty} шт (на складі: ${currentStock} шт)`;
+    });
   }
 
   async function startOutgoingScanner() {
