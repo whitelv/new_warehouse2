@@ -187,15 +187,8 @@ def test_device_state_endpoints(client):
 
     assert client.post("/weight/mode/", json={"active": True}).json() == {"active": True}
     assert client.get("/weight/mode/").json() == {"active": True}
-    current_weight_post = client.post("/weight/current/", json={"weight": 123.4}).json()
-    assert current_weight_post["ok"] is True
-    assert current_weight_post["active"] is True
-    assert current_weight_post["sequence"] >= 1
-
-    current_weight_get = client.get("/weight/current/").json()
-    assert current_weight_get["weight"] == 123.4
-    assert current_weight_get["sequence"] == current_weight_post["sequence"]
-    assert current_weight_get["updated_at"] is not None
+    assert client.post("/weight/current/", json={"weight": 123.4}).json() == {"ok": True, "active": True}
+    assert client.get("/weight/current/").json() == {"weight": 123.4}
 
     assert client.post("/weight/confirmed/", json={"weight": 120.0}).json() == {"ok": True}
     assert client.get("/weight/confirmed/").json() == {"weight": 120.0}

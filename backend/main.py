@@ -243,7 +243,7 @@ last_scanned_rfid = {"rfid": None}
 register_mode = {"active": False}
 login_mode = {"active": False}
 oled_message = {"line1": "", "line2": "", "line3": "", "updated": False}
-current_weight_value = {"weight": None, "updated_at": None, "sequence": 0}
+current_weight_value = {"weight": None}
 confirmed_weight_value = {"weight": None}
 weigh_mode = {"active": False}
 weigh_pending = {"barcode": None}
@@ -275,17 +275,11 @@ async def get_weigh_mode():
 @app.post("/weight/current/")
 async def set_current_weight(data: dict):
     current_weight_value["weight"] = data.get("weight")
-    current_weight_value["updated_at"] = datetime.now(timezone.utc).isoformat()
-    current_weight_value["sequence"] += 1
-    return {"ok": True, "active": weigh_mode["active"], "sequence": current_weight_value["sequence"]}
+    return {"ok": True, "active": weigh_mode["active"]}
 
 @app.get("/weight/current/")
 async def get_current_weight():
-    return {
-        "weight": current_weight_value["weight"],
-        "updated_at": current_weight_value["updated_at"],
-        "sequence": current_weight_value["sequence"],
-    }
+    return {"weight": current_weight_value["weight"]}
 
 @app.post("/weight/confirmed/")
 async def set_confirmed_weight(data: dict):
