@@ -32,7 +32,7 @@ async def healthcheck():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # TODO: replace * with your Netlify URL after deploy
+    allow_origins=["https://silver-parfait-81b8de.netlify.app"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
