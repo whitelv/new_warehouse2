@@ -675,31 +675,23 @@
 
     let attempts = 0;
     let errors   = 0;
-    let prev     = null;
-    let weightCleared = true;
     const MAX_ATTEMPTS = 400;
     const MAX_ERRORS   = 6;
 
     weighPollInterval = setInterval(async () => {
       attempts++;
       try {
-        const res  = await fetch(API + '/weight/current/');
+        const res  = await fetch(API + '/weight/confirmed/');
         const data = await res.json();
         errors = 0;
 
         const w = parseFloat(data.weight);
-        if (!isNaN(w) && w <= minWeight) {
-          weightCleared = true;
-          prev = null;
-        } else if (!isNaN(w) && w > minWeight && weightCleared) {
-          if (prev !== null && Math.abs(w - prev) < 3.0) {
-            clearInterval(weighPollInterval); weighPollInterval = null;
-            stopWeigh();
-            if (btn) { btn.textContent = '⚖️ Зважити'; btn.disabled = false; }
-            onStable((w + prev) / 2);
-            return;
-          }
-          prev = w;
+        if (!isNaN(w) && w > minWeight) {
+          clearInterval(weighPollInterval); weighPollInterval = null;
+          stopWeigh();
+          if (btn) { btn.textContent = '⚖️ Зважити'; btn.disabled = false; }
+          onStable(w);
+          return;
         }
       } catch(e) {
         errors++;
