@@ -681,7 +681,7 @@
     weighPollInterval = setInterval(async () => {
       attempts++;
       try {
-        const res  = await fetch(API + '/weight/confirmed/');
+        const res  = await fetch(API + '/weight/confirmed/?_=' + Date.now());
         const data = await res.json();
         errors = 0;
 

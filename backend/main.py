@@ -291,9 +291,10 @@ async def set_confirmed_weight(data: dict):
 
 @app.get("/weight/confirmed/")
 async def get_confirmed_weight():
+    from fastapi.responses import JSONResponse
     w = confirmed_weight_value["weight"]
     confirmed_weight_value["weight"] = None
-    return {"weight": w}
+    return JSONResponse(content={"weight": w}, headers={"Cache-Control": "no-store"})
 
 @app.get("/rfid/login-mode/")
 async def get_login_mode():
