@@ -719,7 +719,7 @@
         if (status) { status.style.color = '#fc8181'; status.textContent = '❌ Час вийшов. Спробуйте ще раз.'; }
         if (onTimeout) onTimeout();
       }
-    }, 80);
+    }, 300);
   }
 
   async function startTareWeigh() {

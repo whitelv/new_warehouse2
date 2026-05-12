@@ -265,7 +265,10 @@ async def get_oled():
 
 @app.post("/weight/mode/")
 async def set_weigh_mode(data: dict):
-    weigh_mode["active"] = data.get("active", False)
+    active = data.get("active", False)
+    weigh_mode["active"] = active
+    if active:
+        current_weight_value["weight"] = None
     return {"active": weigh_mode["active"]}
 
 @app.get("/weight/mode/")
