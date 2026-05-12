@@ -1,4 +1,4 @@
-  const API = window.WAREHOUSE_API_BASE || window.location.origin;
+  const API = window.WAREHOUSE_API_BASE || (window.location.hostname === "localhost" ? "http://localhost:8000" : "/api");
   let productsCache = {};
   let zxingReader = null;
   let cameraStream = null;
